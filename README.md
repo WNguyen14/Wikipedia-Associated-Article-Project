@@ -27,3 +27,4 @@ This is the csv file for all of the edges in wikipedia in 2018 for English, afte
 
 1. Opening the csv file in excel and then copying the data might add quotation marks to the data? 
 2. Not all ids are used
+3. BST currently doesn't work
