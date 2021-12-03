@@ -4,6 +4,7 @@
 #include <vector>
 #include <bits/stdc++.h>
 #include <sstream>
+#include <chrono>
 using namespace std;
 
 
@@ -22,9 +23,13 @@ public:
     void run()
     {
         makeEdges();
+        printShortestDistance(adjList, 12, 752);
+        //makeTest();
         //cout << adjList.size();
         //printRaw();
     }
+
+
 
     ~Wiki()
     {
@@ -54,7 +59,12 @@ private:
         {
             cout << out[i] << endl;
         }*/
-
+        if (out.size() < 3) //some entries in the csv file are broken, this skips over those
+        {
+            //cout << "busted" << endl;
+            return make_pair(0, 0);
+        }
+        //cout << out[0] << " " << out[2] << endl;
         return make_pair(stoi(out[0]), stoi(out[2]));
     }
 
@@ -82,6 +92,95 @@ private:
             //cout << edges[i].first << " " << edges[i].second << endl;
             adjList[edges[i].first].push_back(edges[i].second);
         }
+
+    }
+
+    void makeTest()
+    {
+        adjList[0].push_back(1);
+        adjList[1].push_back(3);
+        adjList[2].push_back(1);
+        adjList[3].push_back(2);
+        adjList[4].push_back(1);
+        adjList[5].push_back(3);
+        cout << "hey" << endl;
+    }
+
+    bool BFS(vector<vector<int>> adjList, int src, int dest, vector<int> pred, vector<int> dist)
+    {
+
+        queue<int> q;
+
+        vector<bool> visited;
+        visited.resize(adjList.size());
+
+
+        for (int i = 0; i < adjList.size(); i++)
+        {
+            visited.at(i) = false;
+            dist[i] = INT_MAX;
+            pred[i] = INT_MIN;
+        }
+
+        visited[src] = true;
+        dist[src] = 0;
+        q.push(src);
+
+        while (!q.empty())
+        {
+            int u = q.front();
+            q.pop();
+
+            for (int i = 0; i < adjList[u].size(); i++)
+            {
+                cout << i << endl;
+                cout << visited[adjList[u][i]];
+                if (visited[adjList[u][i]] == false)
+                {
+                    visited[adjList[u][i]] = true;
+                    dist[adjList[u][i]] = dist[u] + 1;
+                    pred[adjList[u][i]] = u;
+                    q.push(adjList[u][i]);
+
+                    if (adjList[u][i] == dest)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void printShortestDistance(vector<vector<int>> adjList, int src, int dest)
+    {
+        vector<int> pred;
+        vector<int> dist;
+        pred.resize(adjList.size());
+        dist.resize(adjList.size());
+
+        if (BFS(adjList, src, dest, pred, dist) == false)
+        {
+
+            cout << "Not connected" << endl;
+            return;
+        }
+        vector<int> path;
+        int crawl = dest;
+        path.push_back(crawl);
+        while(pred[crawl] != -1)
+        {
+            path.push_back(pred[crawl]);
+            crawl = pred[crawl];
+        }
+        cout << "Shortest path length: " << dist[dest] << endl;
+        cout << "Path is: " << endl;
+        for (int i = path.size() - 1; i >= 0; i--)
+        {
+            cout << path[i] << " ";
+        }
+
 
     }
 
@@ -115,9 +214,14 @@ void printer(Wiki const& wiki)
 }
 int main() {
     //input the name of the csv file here
-    string file = "Test10000.csv";
+    auto start = chrono::high_resolution_clock::now();
+    string file = "Test900000.csv";
     Wiki wiki(file);
     wiki.run();
-    printer(wiki);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::seconds>(stop - start);
+    //printer(wiki);
+    cout << "Time to create graph: " << duration.count() << " seconds." << endl;
+
     return 0;
 }
