@@ -12,18 +12,26 @@ class Wiki
 {
 public:
     vector<vector<int>> adjList;
-
+    vector<vector<int>> adjMatrix;
     Wiki(string fileName)
     {
         cin.open(fileName);
-        string line;
-        getline(cin, line); //ignore the top line since its just words
+        if (cin.is_open())
+        {
+            string line;
+            getline(cin, line); //ignore the top line since its just words
+        }
+        else
+        {
+            cout <<"invalid filename" << endl;
+        }
+
     }
 
     void run()
     {
         makeEdges();
-        printShortestDistance(adjList, 12, 752);
+        listShortestDistance(adjList, 12, 752);
         //makeTest();
         //cout << adjList.size();
         //printRaw();
@@ -35,6 +43,39 @@ public:
     {
         cin.close();
     }
+
+    void makeTest()
+    {
+        adjList.resize(6);
+//        adjList[0].push_back(1);
+//        adjList[1].push_back(3);
+//        adjList[2].push_back(1);
+//        adjList[3].push_back(2);
+//        adjList[4].push_back(1);
+//        adjList[5].push_back(3);
+        adjList[0].push_back(1);
+        adjList[1].push_back(2);
+        adjList[2].push_back(3);
+        adjList[3].push_back(4);
+        adjList[5].push_back(4);
+        adjList[0].push_back(5);
+        this->listShortestDistance(adjList, 0, 4);
+        adjMatrix = vector<vector<int>> (6, vector<int> (6,0));
+//        adjMatrix[0][1] = 1;
+//        adjMatrix[1][3] = 1;
+//        adjMatrix[2][1] = 1;
+//        adjMatrix[3][2] = 1;
+//        adjMatrix[4][1] = 1;
+//        adjMatrix[5][3] = 1;
+        adjMatrix[0][1] = 1;
+        adjMatrix[1][2] = 1;
+        adjMatrix[2][3] = 1;
+        adjMatrix[3][4] = 1;
+        adjMatrix[5][4] = 1;
+        adjMatrix[0][5] = 1;
+        this->matrixShortestDistance(adjMatrix, 0, 4);
+    }
+
 private:
     ifstream cin;
     pair<int, int> parseLine(string line) //parses a line from the csv
@@ -95,18 +136,7 @@ private:
 
     }
 
-    void makeTest()
-    {
-        adjList[0].push_back(1);
-        adjList[1].push_back(3);
-        adjList[2].push_back(1);
-        adjList[3].push_back(2);
-        adjList[4].push_back(1);
-        adjList[5].push_back(3);
-        cout << "hey" << endl;
-    }
-
-    bool BFS(vector<vector<int>> adjList, int src, int dest, vector<int> pred, vector<int> dist)
+    bool listBFS(vector<vector<int>> &adjList, int src, int dest, vector<int> &pred)
     {
 
         queue<int> q;
@@ -118,12 +148,10 @@ private:
         for (int i = 0; i < adjList.size(); i++)
         {
             visited.at(i) = false;
-            dist[i] = INT_MAX;
-            pred[i] = INT_MIN;
+            pred[i] = -1;
         }
 
         visited[src] = true;
-        dist[src] = 0;
         q.push(src);
 
         while (!q.empty())
@@ -133,12 +161,9 @@ private:
 
             for (int i = 0; i < adjList[u].size(); i++)
             {
-                cout << i << endl;
-                cout << visited[adjList[u][i]];
-                if (visited[adjList[u][i]] == false)
+                if (!visited[adjList[u][i]])
                 {
                     visited[adjList[u][i]] = true;
-                    dist[adjList[u][i]] = dist[u] + 1;
                     pred[adjList[u][i]] = u;
                     q.push(adjList[u][i]);
 
@@ -153,14 +178,12 @@ private:
         return false;
     }
 
-    void printShortestDistance(vector<vector<int>> adjList, int src, int dest)
+    void listShortestDistance(vector<vector<int>> adjList, int src, int dest)
     {
         vector<int> pred;
-        vector<int> dist;
         pred.resize(adjList.size());
-        dist.resize(adjList.size());
 
-        if (BFS(adjList, src, dest, pred, dist) == false)
+        if (!listBFS(adjList, src, dest, pred))
         {
 
             cout << "Not connected" << endl;
@@ -174,8 +197,81 @@ private:
             path.push_back(pred[crawl]);
             crawl = pred[crawl];
         }
-        cout << "Shortest path length: " << dist[dest] << endl;
-        cout << "Path is: " << endl;
+        cout << endl << "Calculate shortest path using adjList and BFS" << endl;
+        cout << "Shortest path length: " << path.size() << " (" << path.size()-1 << " clicks)" << endl;
+        cout << "Path is: ";
+        for (int i = path.size() - 1; i >= 0; i--)
+        {
+            cout << path[i] << " ";
+        }
+
+
+    }
+
+    bool matrixBFS(vector<vector<int>> &adjMatrix, int src, int dest, vector<int> &pred)
+    {
+
+        queue<int> q;
+
+        vector<bool> visited;
+        visited.resize(adjMatrix.size());
+
+
+        for (int i = 0; i < adjMatrix.size(); i++)
+        {
+            visited.at(i) = false;
+            pred[i] = -1;
+        }
+
+        visited[src] = true;
+        q.push(src);
+
+        while (!q.empty())
+        {
+            int u = q.front();
+            q.pop();
+
+            for (int i = 0; i < adjMatrix[u].size(); i++)
+            {
+                if (!visited[i] && adjMatrix[u][i] ==1)
+                {
+                    visited[i] = true;
+                    pred[i] = u;
+                    q.push(i);
+
+                    if (i == dest)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void matrixShortestDistance(vector<vector<int>> adjMatrix, int src, int dest)
+    {
+        vector<int> pred;
+        pred.resize(adjMatrix.size());
+
+        if (!matrixBFS(adjMatrix, src, dest, pred))
+        {
+
+            cout << "Not connected" << endl;
+            return;
+        }
+        vector<int> path;
+        int crawl = dest;
+        path.push_back(crawl);
+        while(pred[crawl] != -1)
+        {
+            path.push_back(pred[crawl]);
+            crawl = pred[crawl];
+        }
+        cout << endl << "Calculate shortest path using asjMatrix and BFS" << endl;
+        cout << "Shortest path length: " << path.size() << " (" << path.size()-1 << " clicks)" << endl;
+        cout << "Path is: ";
         for (int i = path.size() - 1; i >= 0; i--)
         {
             cout << path[i] << " ";
@@ -212,8 +308,10 @@ void printer(Wiki const& wiki)
         cout << endl;
     }
 }
+
+
 int main() {
-    //input the name of the csv file here
+/*    //input the name of the csv file here
     auto start = chrono::high_resolution_clock::now();
     string file = "Test900000.csv";
     Wiki wiki(file);
@@ -222,6 +320,10 @@ int main() {
     auto duration = chrono::duration_cast<chrono::seconds>(stop - start);
     //printer(wiki);
     cout << "Time to create graph: " << duration.count() << " seconds." << endl;
-
+    */
+    Wiki wiki("dummy filename");
+    wiki.makeTest();
     return 0;
+
+
 }
