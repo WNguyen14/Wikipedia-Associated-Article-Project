@@ -16,9 +16,8 @@ class Wiki
 public:
     vector<vector<int>> adjList;
     unordered_map<int, unordered_map<int, int>> adjMatrix;
-    vector<pair<int, int>> edgeList;
     vector<string> path;
-
+    //create Wiki object from filename
     Wiki(string fileName)
     {
 
@@ -40,7 +39,7 @@ public:
     void run()
     {
 
-        makeEdges();
+        makeEdges(); //make some edges
         //printShortestDistance(adjList, 12, 752);
         //makeTest();
         //cout << adjList.size()<< endl;
@@ -49,6 +48,16 @@ public:
 
     void rewrite()
     {
+        /*
+         * method to create the cut files
+         * originally, wikipedia dumps are a ton of data
+         * we got much of our data from wikilinkgraphs
+         * the csv file has each line format:
+         * page_from\tid_from\page_to\tid_to
+         * since we only need the id_from and id_to
+         * we cut down and write a new file with this function
+         * using the csv file as is with the page_from and page_to strings slows down building the graph
+         */
         cout << "Rewriting.." << endl;
         output.open("REWRITE_Test10000.csv");
         string line;
@@ -60,19 +69,20 @@ public:
 
     }
 
-    void makePath(bool adjacencyList, int id_from, int id_to)
+    void makePath(bool adjacencyList, int id_from, int id_to)//called when making a path given two ids
     {
+        /*
+         * given a boolean adjacencyList and two ints, we find a path
+         * if adjacencyList = true, we use the adjacencyList to find a path
+         * id_from and id_to correspond to the source and destination
+         */
         if (adjacencyList) {
             cout << "USING ADJACENCY LIST: \n";
             cout << "FROM: " << id_from << " "<< "TO: " << id_to << endl;
             path = convertIdToName(listShortestDistance(adjList, id_from, id_to));
             //listShortestDistance(adjList, id_from, id_to);
         }
-        /*else {
-            cout << "USING ADJACENCY MATRIX: \n";
-            cout << "FROM: " << id_from << " "<< "TO: " << id_to << endl;
-            matrixShortestDistance(adjMatrix, id_from, id_to);
-        }*/
+
         else {
             cout << "USING ADJACENCY MATRIX: \n";
             cout << "FROM: " << id_from << " "<< "TO: " << id_to << endl;
@@ -82,6 +92,7 @@ public:
         }
     }
 
+    //returns the path in terms of a string
     vector<string> getPath()
     {
         return path;
@@ -113,17 +124,12 @@ private:
         while(getline(ss, s, '\t'))
             out.push_back(s);
 
-        /*for (int i = 0; i < out.size(); i++)
-        {
-            cout << out[i] << endl;
-        }*/
         /*if (out.size() < 3) //some entries in the csv file are broken, this skips over those
         {
             //cout << "busted" << endl;
             return make_pair(0, 0);
         }*/
 
-        //cout << out[0] << " " << out[1] << endl;
         //return make_pair(stoi(out[0]), stoi(out[2]));
         return make_pair(stoi(out[0]), stoi(out[1]));
     }
@@ -168,6 +174,12 @@ private:
 
     bool listBFS(vector<vector<int>> &adjList, int src, int dest, vector<int> &pred)
     {
+        /*
+         * Helper function
+         * BFS search for the adjacency list,
+         * Use a queue and a vector of booleans to track where we've visited
+         * Also track the predecessor to print out the path
+         */
 
         queue<int> q;
 
@@ -217,6 +229,12 @@ private:
 
     vector<int> listShortestDistance(vector<vector<int>> &adjList, int src, int dest)
     {
+        /*
+         * This function will give the shortest distance and the path
+         * listBFS will tell if there is a path
+         * if there is, we save the path in the predecessor vector
+         * Then we will push the path and convert the ID to the page name
+         */
         vector<int> output;
         output.push_back(0);
         vector<int> pred;
@@ -253,7 +271,14 @@ private:
 
     bool matrixBFS(unordered_map<int, unordered_map<int, int>> &adjMatrix, int src, int dest, unordered_map<int, int> &pred)
     {
-
+        /*
+         * same idea as the adjacency list
+         * We tried to use vectors for this but they took WAY too long in terms of computational power
+         * We use unordered_map to cut down on the number of empty cells
+         * This is because the highest page id is orders of magnitude larger than the wiki size
+         * For example: page id = 52188771: "2016 Sleaford and North Hykeham by-election"
+         * This page id is much greater than the size of the whole graph
+         */
         queue<int> q;
 
         unordered_map<int, bool> visited;
@@ -296,6 +321,12 @@ private:
 
     vector<int> matrixShortestDistance(unordered_map<int, unordered_map<int, int>> &adjMatrix, int src, int dest)
     {
+        /*
+        * This function will give the shortest distance and the path
+        * matrixBFS will tell if there is a path
+        * if there is, we save the path in the predecessor vector
+        * Then we will push the path and convert the ID to the page name
+        */
         unordered_map<int, int> pred;
         vector<int> output;
         output.push_back(0);
@@ -327,6 +358,10 @@ private:
 
     string search()
     {
+        /*
+         * searches html file of MediaWiki page to find the title
+         * <title> TITLE </title> format of line for title
+         */
         string s = "<title>";
         ifstream inFile;
         string line;
@@ -344,6 +379,9 @@ private:
 
     string remover(string s, string remove)
     {
+        /*
+         * cuts down the line for a title into just the title
+         */
         auto n = s.find(remove);
         if(n != std::string::npos)
             s.erase(n, remove.length());
@@ -353,6 +391,13 @@ private:
 
     vector<string> convertIdToName(vector<int> ids)
     {
+        /*
+         * converts the IDs into the page names
+         * we use wget to go to the wikipedia page corresponding to an id
+         * then we download that page
+         * then we can parse the html file for the title
+         * then we push back into the output
+         */
         //cout << "CONVERTING" << endl;
         vector<string> output;
         for (int i = 0; i < ids.size(); i++)
