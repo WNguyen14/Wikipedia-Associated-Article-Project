@@ -31,3 +31,4 @@ This is the csv file for all of the edges in wikipedia in 2018 for English, afte
 4. Adj Matrix and Adj List work!
 5. Link to 900,000 edge demonstration https://drive.google.com/file/d/1qUvTNrbFmH_RWu9hSRnwrdZ6CPJYHq9k/view?usp=sharing
 6. Link to 16,000,000 edge demonstration https://drive.google.com/file/d/1FuZXMdMLLtm90X4TI3FnoWkV5cjya6nD/view?usp=sharing
+7. Must install wget to convert page id into their respective names
